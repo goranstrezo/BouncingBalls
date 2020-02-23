@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Bouncing Balls</title>
+	<style type="text/css">
+		canvas {
+			border: 1px solid black; 
+			cursor: crosshair;
+		}
+	</style>
+</head>
+<body>
+	<canvas id="BouncingBallH4" width="600" height="400"></canvas>
+	<script type="text/javascript">
+		var canvas;
+		var ctx;
+		// a set of const values used in functions later
+		const radius = 10;
+		const gravity = 0.2;
+		const damping = 0.9;
+		const traction = 0.9;
+		const minRandom = -10;
+		const maxRandom = 10;
+
+		// Initialize
+		(function() {
+			var allCircles = new mainLogic();
+			canvas = document.getElementById("BouncingBallH4");
+			ctx = canvas.getContext("2d");
+			// different colours, usefull to see the difference in speed and direction when testing
+			var colourArray = [
+							"Navy", "Aquamarine", "SpringGreen", "Coral", "Crimson",
+							"DarkGrey", "DarkOrange", "DarkTurquoise", "DeepSkyBlue", "ForestGreen"
+							];
+			//on click create new ball
+			canvas.addEventListener("click", function() {
+				var circleObject = new Circle(
+					event.pageX, 
+					event.pageY, 
+					getRandomInteger(minRandom, maxRandom), 
+					getRandomInteger(minRandom, maxRandom),
+					colourArray[getRandomInteger(0, 9)]
+					);
+                 // push new element in the array of circles
+				allCircles.Circles.push(circleObject);
+				//once there is new element added in the array, call createScreen function
+				allCircles.createScreen();
+			});
+		})();
+         //function used for creating random integers
+         // Matn.random() would give a random number between 0 and 1, Math.floor rounds a number down and returns integer value
+		function getRandomInteger(min, max) {
+			return Math.floor(Math.random() * (max - min + 1) ) + min;
+		}
+     
+		function Circle(x, y, vx, vy, colour) {
+			this.X = x;
+			this.Y = y;
+			this.vX = vx;
+			this.vY = vy;
+			this.prevX = 0;
+			this.prevY = 0;
+			this.Colour = colour;
+			
+			this.fixedPosition = function() {
+				return (this.X == this.prevX && this.Y == this.prevY);
+			},
+
+			this.create = function() {
+			    //hit the max width of the window, continue in oposite direction
+				if (this.X + radius >= canvas.width) {
+					this.vX = -this.vX * damping;
+					this.X = canvas.width - radius;
+				//hit the start of the window, continue in oposite direction
+				} else if (this.X - radius <= 0) {
+					this.vX = -this.vX * damping;
+					this.X = radius;
+				}
+				//hit the max height of the window, start in oposite direction
+				if (this.Y + radius >= canvas.height) {
+					this.vY = -this.vY * damping;
+					this.Y = canvas.height - radius;
+					// traction here
+					this.vX *= traction;
+				//hit the bottom of the window	
+				} else if (this.Y - radius <= 0) {
+					this.vY = -this.vY * damping;
+					this.Y = radius;
+				}
+
+				this.vY += gravity; // add gravity to allow balls to stop after a while
+				this.X += this.vX;
+				this.Y += this.vY;
+                
+				//built in metod to begin a path
+				ctx.beginPath();
+				//arc is js inbuilt function, used to draw an arc
+				ctx.arc(this.X, this.Y, radius, 0, 2 * Math.PI, false);
+				ctx.fillStyle = this.Colour;
+				ctx.fill();
+			}
+		}
+
+		function mainLogic() {
+			this.Circles = [];
+            //clearRect used to clear all pixels in a given rectangle
+			this.clear = function() {
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+			},
+
+			this.createScreen = function() {
+				var self = this;
+				this.StopAnimationFrame = true;
+				this.clear();
+
+				this.Circles.forEach(function(value, index, arr) {
+				    //call create circle function for all the elements from the array
+					value.create();
+
+					self.StopAnimationFrame = self.StopAnimationFrame && value.fixedPosition();
+					value.prevX = value.X;
+					value.prevY = value.Y;
+				});
+
+				if (!this.StopAnimationFrame) {
+				// requestAnimationFrame Tells the browser that you wish to perform an animation and requests that the browser call a specified function to update an animation before the next repaint.
+					requestAnimationFrame(this.createScreen.bind(this));
+				} 
+			}
+		}
+	</script>
+</body>
+</html>
