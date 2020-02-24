@@ -61,7 +61,7 @@
 			this.prevX = 0;
 			this.prevY = 0;
 			this.Colour = colour;
-			
+			//keep previous ball position, to detect if ball is still moving. This function is used later stopping animation.
 			this.fixedPosition = function() {
 				return (this.X == this.prevX && this.Y == this.prevY);
 			},
